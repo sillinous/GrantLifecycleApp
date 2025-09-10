@@ -51,7 +51,12 @@ jobs:
         run: sf project deploy start --source-dir force-app --target-org testorg
 
       - name: Run Apex Tests
-        run: sf apex run test --target-org testorg --result-format human --code-coverage --wait 30
+        run: |
+          sf apex run test --target-org testorg --result-format human --code-coverage --wait 60 --output-dir test-results
+          # Enforce org-wide coverage >= 75%
+          COVER=$(sf apex get coverage --target-org testorg --json | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const j=JSON.parse(d);console.log(Math.round((j.result.orgWideCoverage)*100));})")
+          echo "Org-wide coverage: ${COVER}%"
+          if [ "$COVER" -lt 75 ]; then echo "Coverage below 75%"; exit 1; fi
 
       - name: Delete Scratch Org
         if: always()
