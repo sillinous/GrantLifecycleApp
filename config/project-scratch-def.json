@@ -1,0 +1,10 @@
+{
+  "orgName": "GrantLifecycleApp",
+  "edition": "Developer",
+  "features": [],
+  "settings": {
+    "chatterSettings": {
+      "enableChatter": true
+    }
+  }
+}

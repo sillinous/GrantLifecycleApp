@@ -29,3 +29,9 @@ CI
 --
 
 - This repo includes a GitHub Actions workflow at `.github/workflows/validate.yml` running PMD rules against `src/classes`. Extend to add org-based validation and tests as needed.
+
+Scratch org tests via SFDX
+--------------------------
+
+- A workflow `.github/workflows/sfdx-tests.yml` converts `src/` to SFDX on the fly and runs Apex tests in a scratch org.
+- Configure a repository secret `SFDX_AUTH_URL` with your Dev Hub auth URL (`sf org display --verbose --json | jq -r .result.sfdxAuthUrl`).
