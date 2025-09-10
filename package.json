@@ -1,0 +1,11 @@
+{
+  "name": "grant-lifecycle-e2e",
+  "private": true,
+  "devDependencies": {
+    "@playwright/test": "1.47.2"
+  },
+  "scripts": {
+    "e2e:install": "npx playwright install --with-deps",
+    "e2e": "playwright test"
+  }
+}

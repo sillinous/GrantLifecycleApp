@@ -1,0 +1,60 @@
+name: Playwright E2E (Salesforce)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 9 * * 1' # weekly Monday 9:00 UTC
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Playwright
+        run: npm ci && npm run e2e:install
+      - name: Authenticate Dev Hub and create scratch org
+        env:
+          SFDX_AUTH_URL: ${{ secrets.SFDX_AUTH_URL }}
+        run: |
+          npm install --global @salesforce/cli
+          echo "$SFDX_AUTH_URL" > auth_url.txt
+          sf org login sfdx-url --sfdx-url-file auth_url.txt --alias DevHub --set-default-dev-hub
+          if [ ! -f config/project-scratch-def.json ]; then
+            mkdir -p config
+            echo '{"orgName":"GLA","edition":"Developer","settings":{"chatterSettings":{"enableChatter":true}}}' > config/project-scratch-def.json
+          fi
+          sf org create scratch --definition-file config/project-scratch-def.json --alias e2e --duration-days 1 --set-default
+          sf project convert mdapi --root-dir src --output-dir force-app
+          sf project deploy start --source-dir force-app --target-org e2e
+      - name: Seed data for E2E
+        run: |
+          sf apex run --file scripts/seed-e2e.apex --target-org e2e | tee seed.log
+          PROJ=$(grep 'SEED:PROJECT=' seed.log | sed 's/SEED:PROJECT=//')
+          OPP=$(grep 'SEED:OPPORTUNITY=' seed.log | sed 's/SEED:OPPORTUNITY=//')
+          echo "E2E_PROJECT_ID=$PROJ" >> $GITHUB_ENV
+          echo "E2E_OPPORTUNITY_ID=$OPP" >> $GITHUB_ENV
+          URL=$(sf org display --target-org e2e --verbose --json | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const j=JSON.parse(d);console.log(j.result.instanceUrl);})")
+          echo "SF_ORG_BASE=$URL" >> $GITHUB_ENV
+      - name: Create test user and fetch credentials
+        run: |
+          # Use the default user for simplicity; in real-world, create a dedicated test user
+          USER=$(sf org display --target-org e2e --verbose --json | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const j=JSON.parse(d);console.log(j.result.username);})")
+          PASS=$(sf org generate password --target-org e2e --json | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const j=JSON.parse(d);console.log(j.result.passwords[0].password);})")
+          echo "SF_USERNAME=$USER" >> $GITHUB_ENV
+          echo "SF_PASSWORD=$PASS" >> $GITHUB_ENV
+      - name: Run Playwright tests
+        env:
+          SF_ORG_BASE: ${{ env.SF_ORG_BASE }}
+          SF_USERNAME: ${{ env.SF_USERNAME }}
+          SF_PASSWORD: ${{ env.SF_PASSWORD }}
+          E2E_PROJECT_ID: ${{ env.E2E_PROJECT_ID }}
+          E2E_OPPORTUNITY_ID: ${{ env.E2E_OPPORTUNITY_ID }}
+        run: npm run e2e
+      - name: Delete scratch org
+        if: always()
+        run: sf org delete scratch --target-org e2e --no-prompt
