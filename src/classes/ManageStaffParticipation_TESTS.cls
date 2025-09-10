@@ -40,6 +40,7 @@ private class ManageStaffParticipation_TESTS {
 //Although the SP Trigger is tested by association, 
 //this will explicitly test the trigger/class
   @IsTest(SeeAllData=true)//Required when testing Chatter
+  // TODO: Replace SeeAllData by using Test.startTest() with explicit test records and stubbing ConnectApi calls
   static void UpdateStaffonOpportunity() {
 
   Account ourAccount = TestDataFactory_TEST.setupNewAccount(TRUE, 'Our Account');

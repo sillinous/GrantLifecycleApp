@@ -12,4 +12,20 @@ You can install the Unmanaged Package using [this link] (https://login.salesforc
 
 You'll find lots of documentation about how to use the package in Grant Lifecycle Chatter Group in the [Power of Us Hub](https://powerofus.force.com/_ui/core/chatter/groups/GroupProfilePage?g=0F980000000CncZ)
 
-To install the code in this repository you can use the tool [Andrew Fawcett](http://andyinthecloud.com/) built using [this link](https://githubsfdeploy.herokuapp.com/app/githubdeploy/britishboyindc/GrantLifecycleApp)
+Modern install options
+----------------------
+
+- SFDX (recommended): Convert MDAPI `src/` to SFDX and deploy to a scratch/sandbox org.
+  - Prereqs: Salesforce CLI installed, org auth available.
+  - Steps:
+    1. Convert locally: `sf project convert mdapi -r src -d force-app`
+    2. Authorize org: `sf org login web -a MySandbox`
+    3. Deploy source: `sf project deploy start -d force-app -o MySandbox`
+    4. Run tests: `sf apex run test -o MySandbox`
+
+- Legacy MDAPI: Use Workbench or ANT to deploy the `src/` folder with `package.xml`.
+
+CI
+--
+
+- This repo includes a GitHub Actions workflow at `.github/workflows/validate.yml` running PMD rules against `src/classes`. Extend to add org-based validation and tests as needed.

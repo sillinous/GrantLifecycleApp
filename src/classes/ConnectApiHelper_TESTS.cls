@@ -6,10 +6,10 @@
  *
  */
 
-@IsTest(SeeAllData=true)
+@IsTest(SeeAllData=true) // TODO: Refactor to remove SeeAllData by creating test data and mocking ConnectApi
 public class ConnectApiHelper_TESTS {
 
-    @IsTest(SeeAllData=true)
+    @IsTest(SeeAllData=true) // TODO: Replace with isolated test data
     static void testInvalidMentionType() {
         Boolean exceptionThrown = false;
         try {
@@ -22,7 +22,7 @@ public class ConnectApiHelper_TESTS {
         System.assert(exceptionThrown);
     }
 
-    @IsTest(SeeAllData=true)
+    @IsTest(SeeAllData=true) // TODO: Replace with isolated test data
     static void testNullString() {
         Boolean exceptionThrown = false;
         try {

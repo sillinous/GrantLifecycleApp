@@ -1,0 +1,26 @@
+name: Validate Apex (Legacy MDAPI)
+
+on:
+  pull_request:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Run PMD Apex rules via GitHub Action
+        uses: pmd/pmd-github-action@v2
+        with:
+          rulesets: 'category/apex/design.xml,category/apex/performance.xml,category/apex/security.xml'
+          sourcePath: 'src/classes'
+          analyzeModifiedFilesOnly: false
+          createGitHubAnnotations: true
+

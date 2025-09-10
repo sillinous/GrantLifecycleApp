@@ -38,7 +38,7 @@
 *     2. Post to Chatter feed of staffer who is also a user to tell them they are added as a lead staffer   
 */
 
-public class ManageStaffParticipation {
+public without sharing class ManageStaffParticipation {
 /* With reference to Steve Andersen's post: http://gokubi.com/archives/two-interesting-ways-to-architect-apex-triggers */ 
 public static List<Staff_Participation__c> staffforupdatelist;
 
