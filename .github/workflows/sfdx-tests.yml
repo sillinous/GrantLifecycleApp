@@ -41,12 +41,11 @@ jobs:
 
       - name: Create Scratch Org
         run: |
-          sf org create scratch --definition-file config/project-scratch-def.json --alias testorg --duration-days 1 --set-default || echo "Using default config"
-          # Fallback: create with default if config missing
-          if ! sf org display --json | jq -e '.result.username' >/dev/null; then
-            echo '{"orgName":"GLA","edition":"Developer"}' > project-scratch-def.json
-            sf org create scratch --definition-file project-scratch-def.json --alias testorg --duration-days 1 --set-default
+          if [ ! -f config/project-scratch-def.json ]; then
+            mkdir -p config
+            echo '{"orgName":"GLA","edition":"Developer","settings":{"chatterSettings":{"enableChatter":true}}}' > config/project-scratch-def.json
           fi
+          sf org create scratch --definition-file config/project-scratch-def.json --alias testorg --duration-days 1 --set-default
 
       - name: Push Source
         run: sf project deploy start --source-dir force-app --target-org testorg

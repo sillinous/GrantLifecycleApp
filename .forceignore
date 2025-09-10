@@ -1,0 +1,11 @@
+# Ignore files that should not be tracked by SFDX source
+**/.sfdx/
+**/.sf/
+**/coverage/
+**/.localdevserver/
+**/scratch-orgs/**
+**/.DS_Store
+**/Thumbs.db
+**/npm-debug.log
+**/yarn.lock
+**/package-lock.json
