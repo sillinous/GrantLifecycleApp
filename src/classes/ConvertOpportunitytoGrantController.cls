@@ -67,14 +67,22 @@ private Contact cuser;
         }
     
     public pagereference createGrantRecord () {
-          //insert grant
-          insert gm;
-          //Post any shared attachments to chatter feed
-          ChatterUtility.setupAttachmentstoShare(gm.Id);
-          
-          //Post back on source Opportunity feed
-          String sPost = 'A new Grant Record was created for this Opportunity';
-          ConnectAPIHelper.postFeedItemWithMentions(null, opty.Id, sPost);
+          // Enforce CRUD/FLS and insert grant
+          if (!Schema.sObjectType.Grant_Management__c.isCreateable()) {
+              ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Insufficient access to create grants.'));
+              return null;
+          }
+          SObjectAccessDecision accIns = Security.stripInaccessible(AccessType.CREATABLE, new List<Grant_Management__c>{ gm });
+          List<Grant_Management__c> safe = (List<Grant_Management__c>)accIns.getRecords();
+          insert safe;
+          gm = safe[0];
+          //Post any shared attachments to chatter feed (best-effort)
+          try { ChatterUtility.setupAttachmentstoShare(gm.Id); } catch (Exception ignore) {}
+          //Post back on source Opportunity feed (best-effort)
+          try {
+              String sPost = 'A new Grant Record was created for this Opportunity';
+              ConnectAPIHelper.postFeedItemWithMentions(null, opty.Id, sPost);
+          } catch (Exception ignore) {}
         
           //direct to staff setup page
           PageReference gparticipate = new PageReference('/apex/GrantWizardP2?id='+gm.Id+'&sId=' + opty.Id);
@@ -117,6 +125,9 @@ sObject optyo = database.query(sQuery);
         for (Opty_Grant_Fields__c s: GrantFieldList ) {
              gm.put( s.Grant_Field__c, optyo.get(s.Name)  );  
         }
+        // Sanitize mapped fields for FLS before later insert
+        SObjectAccessDecision accPrep = Security.stripInaccessible(AccessType.CREATABLE, new List<Grant_Management__c>{ gm });
+        gm = ((List<Grant_Management__c>)accPrep.getRecords())[0];
 
 }
 
