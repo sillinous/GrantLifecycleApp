@@ -243,25 +243,58 @@ return newpage;
 //loop through wrapper and add new issues
 private Boolean processSelected(){
 List<Issue_Intersection__c> issuesforintersection = new List<Issue_Intersection__c> ();
-
-sObject so; 
+List<Issue_Intersection__c> toInsert = new List<Issue_Intersection__c>();
+List<Issue_Intersection__c> toUpdate = new List<Issue_Intersection__c>();
 
     for (String s: TaxonomySectionMap.keyset() ) {
-        
         for (issueselectionwrapper iiu: TaxonomySectionMap.get(s) ) {
             issuesforintersection.add(iiu.issueintersection);
         }
     }
-    
-    try {
-        upsert issuesforintersection;
-        delete deleteIssues;  //process deletions
-    return TRUE;
+
+    // Partition into insert/update
+    for (Issue_Intersection__c row : issuesforintersection) {
+        if (row.Id == null) {
+            toInsert.add(row);
+        } else {
+            toUpdate.add(row);
+        }
     }
-    
+
+    try {
+        // Object CRUD checks
+        if (!Schema.sObjectType.Issue_Intersection__c.isCreateable() && toInsert.size() > 0) {
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Insufficient access to create Issue Intersections.'));
+            return FALSE;
+        }
+        if (!Schema.sObjectType.Issue_Intersection__c.isUpdateable() && toUpdate.size() > 0) {
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Insufficient access to update Issue Intersections.'));
+            return FALSE;
+        }
+        if (!Schema.sObjectType.Issue_Intersection__c.isDeletable() && deleteIssues.size() > 0) {
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Insufficient access to delete Issue Intersections.'));
+            return FALSE;
+        }
+
+        // Field-level security filtering
+        if (toInsert.size() > 0) {
+            SObjectAccessDecision accIns = Security.stripInaccessible(AccessType.CREATABLE, toInsert);
+            List<Issue_Intersection__c> safeToInsert = (List<Issue_Intersection__c>)accIns.getRecords();
+            Database.insert(safeToInsert, false);
+        }
+        if (toUpdate.size() > 0) {
+            SObjectAccessDecision accUpd = Security.stripInaccessible(AccessType.UPDATABLE, toUpdate);
+            List<Issue_Intersection__c> safeToUpdate = (List<Issue_Intersection__c>)accUpd.getRecords();
+            Database.update(safeToUpdate, false);
+        }
+        if (deleteIssues.size() > 0) {
+            Database.delete(deleteIssues, false);
+        }
+        return TRUE;
+    }
     catch (Exception Ex) {
-        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error:' + Ex.getmessage()));
-    return FALSE;
+        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error: ' + Ex.getmessage()));
+        return FALSE;
     }
 
 }
