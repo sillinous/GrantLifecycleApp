@@ -6,7 +6,7 @@
  *
  */
 
-@IsTest(SeeAllData=true) // TODO: Refactor to remove SeeAllData by creating test data and mocking ConnectApi
+@IsTest // TODO: Refactor to remove SeeAllData by creating test data and mocking ConnectApi
 public class ConnectApiHelper_TESTS {
 
     @IsTest(SeeAllData=true) // TODO: Replace with isolated test data
@@ -22,7 +22,7 @@ public class ConnectApiHelper_TESTS {
         System.assert(exceptionThrown);
     }
 
-    @IsTest(SeeAllData=true) // TODO: Replace with isolated test data
+    @IsTest // TODO: Replace with isolated test data
     static void testNullString() {
         Boolean exceptionThrown = false;
         try {
@@ -34,13 +34,13 @@ public class ConnectApiHelper_TESTS {
         System.assert(exceptionThrown);
     }
 
-    @IsTest(SeeAllData=true)
+    @IsTest
     static void testEmptyString() {
         List<ConnectApi.MessageSegmentInput> segments = ConnectApiHelper.getMessageSegmentInputs('');
         System.assertEquals(0, segments.size());
     }
 
-    @IsTest(SeeAllData=true)
+    @IsTest
     static void testNoMentions() {
         String text = 'hey there';
         List<ConnectApi.MessageSegmentInput> segments = ConnectApiHelper.getMessageSegmentInputs(text);
@@ -51,7 +51,7 @@ public class ConnectApiHelper_TESTS {
         System.assertEquals(text, textSegment.text);
     }
 
-    @IsTest(SeeAllData=true)
+    @IsTest
     static void testMentionOnly() {
         String mentionId = '005x0000000URNP';
         String text = '{' + mentionId + '}';
@@ -63,7 +63,7 @@ public class ConnectApiHelper_TESTS {
         System.assertEquals(mentionId, mentionSegment.id);
     }
 
-    @IsTest(SeeAllData=true)
+    @IsTest
     static void testLeadingMention() {
         String mentionId = '005x0000000URNPzzz';
         String restOfMessage = ' - how are you?';
@@ -81,7 +81,7 @@ public class ConnectApiHelper_TESTS {
         System.assertEquals(restOfMessage, textSegment.text);
     }
 
-    @IsTest(SeeAllData=true)
+    @IsTest
     static void testTrailingMention() {
         String restOfMessage = 'Here we go: ';
         String mentionId = '005x0000000URNPzzz';
@@ -99,7 +99,7 @@ public class ConnectApiHelper_TESTS {
         System.assertEquals(mentionId, mentionSegment.id);
     }
 
-    @IsTest(SeeAllData=true)
+    @IsTest
     static void testAdjacentMentions() {
         String mentionId  = '005x0000000URNPzzz';
         String mentionId2 = '0F9x00000000D7m';
