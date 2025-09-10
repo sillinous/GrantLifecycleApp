@@ -1,0 +1,64 @@
+name: SFDX Convert and Run Apex Tests
+
+on:
+  pull_request:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Salesforce CLI
+        run: npm install --global @salesforce/cli
+
+      - name: Authenticate Dev Hub
+        env:
+          SFDX_AUTH_URL: ${{ secrets.SFDX_AUTH_URL }}
+        run: |
+          echo "$SFDX_AUTH_URL" > auth_url.txt
+          sf org login sfdx-url --sfdx-url-file auth_url.txt --alias DevHub --set-default-dev-hub
+
+      - name: Ensure sfdx-project.json exists
+        run: |
+          if [ ! -f sfdx-project.json ]; then
+            echo 'Missing sfdx-project.json'; exit 1; fi
+
+      - name: Convert MDAPI to SFDX source
+        run: |
+          mkdir -p force-app
+          sf project convert mdapi --root-dir src --output-dir force-app
+
+      - name: Create Scratch Org
+        run: |
+          if [ ! -f config/project-scratch-def.json ]; then
+            mkdir -p config
+            echo '{"orgName":"GLA","edition":"Developer","settings":{"chatterSettings":{"enableChatter":true}}}' > config/project-scratch-def.json
+          fi
+          sf org create scratch --definition-file config/project-scratch-def.json --alias testorg --duration-days 1 --set-default
+
+      - name: Push Source
+        run: sf project deploy start --source-dir force-app --target-org testorg
+
+      - name: Run Apex Tests
+        run: |
+          sf apex run test --target-org testorg --result-format human --code-coverage --wait 60 --output-dir test-results
+          # Enforce org-wide coverage >= 75%
+          COVER=$(sf apex get coverage --target-org testorg --json | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const j=JSON.parse(d);console.log(Math.round((j.result.orgWideCoverage)*100));})")
+          echo "Org-wide coverage: ${COVER}%"
+          if [ "$COVER" -lt 75 ]; then echo "Coverage below 75%"; exit 1; fi
+
+      - name: Delete Scratch Org
+        if: always()
+        run: sf org delete scratch --target-org testorg --no-prompt
+

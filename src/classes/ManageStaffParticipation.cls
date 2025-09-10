@@ -38,7 +38,7 @@
 *     2. Post to Chatter feed of staffer who is also a user to tell them they are added as a lead staffer   
 */
 
-public class ManageStaffParticipation {
+public without sharing class ManageStaffParticipation {
 /* With reference to Steve Andersen's post: http://gokubi.com/archives/two-interesting-ways-to-architect-apex-triggers */ 
 public static List<Staff_Participation__c> staffforupdatelist;
 
@@ -173,8 +173,18 @@ List<sObject> updateObjectList = database.query(s);
         }
     a.put('Lead_Staff__c', sContact);
     }
-//update Lead Staffer field on parent records
-update updateObjectList;
+//update Lead Staffer field on parent records with CRUD/FLS checks
+Schema.SObjectType sObjType = Schema.getGlobalDescribe().get(sObjectName);
+if (sObjType == null) {
+    return;
+}
+if (!sObjType.isUpdateable()) {
+    return;
+}
+// Sanitize fields based on FLS
+SObjectAccessDecision acc = Security.stripInaccessible(AccessType.UPDATABLE, updateObjectList);
+List<sObject> safeToUpdate = acc.getRecords();
+Database.update(safeToUpdate, false);
 
 }
 

@@ -205,7 +205,7 @@ private void buildsummarydata() {
 
 
 //Set Reporting Year Value
-AggregateResult [] sYear = [Select MAX(Year__c) maxyear from Accounting_data_load__c WHERE Project_Code__c = '811'];
+AggregateResult [] sYear = [Select MAX(Year__c) maxyear from Accounting_data_load__c WHERE Project_Code__c = :p.Project_Code__c];
 
 if (sYear.size() > 0) {
     reportingYear = (String)sYear[0].get('maxyear');

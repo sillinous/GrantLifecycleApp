@@ -37,7 +37,7 @@
 @isTest
 private class ConvertOptytoGrant_TESTS {
 	
-	@IsTest(SeeAllData=true)
+	@IsTest
 	static void OpportunitytoGrantConversionPage() {
 
 	Account ourAccount = TestDataFactory_TEST.setupNewAccount(TRUE, 'Our Account');

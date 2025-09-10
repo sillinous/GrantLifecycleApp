@@ -1,0 +1,43 @@
+name: Validate Apex (Legacy MDAPI)
+
+on:
+  pull_request:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Run PMD Apex rules via GitHub Action
+        uses: pmd/pmd-github-action@v2
+        with:
+          rulesets: 'category/apex/design.xml,category/apex/performance.xml,category/apex/security.xml'
+          sourcePath: 'src/classes'
+          analyzeModifiedFilesOnly: false
+          createGitHubAnnotations: true
+
+      - name: Install Salesforce CLI and sfdx-scanner
+        run: |
+          npm install --global @salesforce/cli sfdx-cli
+          sf plugins install @salesforce/sfdx-scanner
+
+      - name: Run sfdx-scanner apex rules
+        run: |
+          sf scanner run --target "src/classes" --category "Design,Best Practices,Performance,Code Style,Security" --format sarif --outfile sfdx-scanner.sarif || true
+      - name: Upload sfdx-scanner SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: sfdx-scanner.sarif
+
