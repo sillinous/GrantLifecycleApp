@@ -1,0 +1,9 @@
+# Default owners
+* @org-admins
+
+# Apex and metadata
+/src/** @org-admins @salesforce-devs
+/force-app/** @org-admins @salesforce-devs
+
+# CI workflows
+/.github/workflows/** @org-admins @devops
